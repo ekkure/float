@@ -9,3 +9,5 @@ tmp/
 wav2vec2-base-960h/
 wav2vec-english-speech-emotion-recognition/
 results/
+*.tar
+*.mp4
