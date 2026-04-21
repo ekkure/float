@@ -11,7 +11,7 @@ from tqdm import tqdm
 from pathlib import Path
 from transformers import Wav2Vec2FeatureExtractor
 
-from models.float.FLOAT import FLOAT
+from models.float.FLOAT_meanflow import FLOAT_MeanFlow
 from options.base_options import BaseOptions
 
 
@@ -90,7 +90,7 @@ class InferenceAgent:
 		self.data_processor = DataProcessor(opt)
 
 	def load_model(self) -> None:
-		self.G = FLOAT(self.opt)
+		self.G = FLOAT_MeanFlow(self.opt)   # ← 改为 MeanFlow 版本
 
 	def load_weight(self, checkpoint_path: str, rank: int) -> None:
 		state_dict = torch.load(checkpoint_path, map_location='cpu', weights_only=True)
@@ -131,7 +131,7 @@ class InferenceAgent:
 		r_cfg_scale: float	= 1.0,
 		e_cfg_scale: float	= 1.0,
 		emo: str 			= 'S2E',
-		nfe: int			= 10,
+		nfe: int			= 1,    # ← 默认改为 1（MeanFlow 单步采样）
 		no_crop: bool 		= False,
 		seed: int			= 25,
 		verbose: bool 		= False
@@ -211,4 +211,3 @@ if __name__ == '__main__':
 		no_crop 	= opt.no_crop,
 		seed 		= opt.seed
 		)
-

@@ -66,6 +66,18 @@ class BaseOptions():
 		parser.add_argument('--n_diff_steps', type=int, default=500, help='number of diffusion steps')
 		parser.add_argument('--diff_schedule', type=str, default='cosine', choices=['linear', 'cosine', 'quadratic', 'sigmoid'])
 		parser.add_argument('--diffusion_mode', type=str, default='sample', choices=['sample', 'noise'])
+
+		# ── MeanFlow 新增超参 ──────────────────────────
+		parser.add_argument('--mf_p_adaptive',     type=float, default=1.0,
+                    help='自适应loss权重指数p，论文Table1e，p=1.0最优')
+		parser.add_argument('--mf_c_adaptive',     type=float, default=1e-3,
+                    help='数值稳定常数')
+		parser.add_argument('--mf_ratio_r_neq_t',  type=float, default=0.25,
+                    help='r!=t的采样比例，论文Table1a，0.25最优')
+		parser.add_argument('--mf_lognorm_mu',     type=float, default=-0.4,
+                    help='时间采样lognorm均值，论文Table1d')
+		parser.add_argument('--mf_lognorm_sigma',  type=float, default=1.0,
+                    help='时间采样lognorm标准差')
 		return parser
 
 
