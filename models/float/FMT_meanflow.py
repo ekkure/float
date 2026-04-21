@@ -440,7 +440,7 @@ class MeanFlowTransformer(BaseModel):
         # 注意：JVP 的切向量是 (v_t, 0, 1)，对应 (dz/dt, dr/dt, dt/dt)
         def fn_for_jvp(z_in, t_in):
             # r 作为外部闭包，不参与 JVP 对 t 的求导
-            return self.forward(t_in, r, z_in, wa, wr, we, prev_x, prev_wa, train=True)
+            return self.forward(t_in, r, z_in, wa, wr, we, prev_x, prev_wa, train=false)
 
         # ── 计算 u 和 JVP：dudt = v * ∂u/∂z + ∂u/∂t
         # torch.func.jvp(fn, primals, tangents)

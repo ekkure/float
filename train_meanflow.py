@@ -57,6 +57,11 @@ class MeanFlowOptions(BaseOptions):
         parser.add_argument('--log_every',   type=int,   default=50)
         parser.add_argument('--save_every',  type=int,   default=5000)
         parser.add_argument('--num_workers', type=int,   default=4)
+        
+
+        parser.add_argument('--max_grad_norm',   type=float, default=1.0)
+        parser.add_argument('--mf_p_adaptive',   type=float, default=1.0)
+        parser.add_argument('--mf_c_adaptive',   type=float, default=1e-3)
 
         # ── MeanFlow 专属超参
         # parser.add_argument('--mf_p_adaptive',    type=float, default=1.0,
