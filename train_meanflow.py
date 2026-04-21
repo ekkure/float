@@ -30,8 +30,8 @@ from torch.utils.data import DataLoader, DistributedSampler
 
 # ── 导入模型
 from models.float.FLOAT_meanflow import FLOAT_MeanFlow
-from base_options import BaseOptions
-
+#from base_options import BaseOptions
+from options.base_options import BaseOptions
 
 # ──────────────────────────────────────────────────────────────
 # 配置解析（继承 BaseOptions 并新增 MeanFlow 专属选项）
@@ -59,16 +59,16 @@ class MeanFlowOptions(BaseOptions):
         parser.add_argument('--num_workers', type=int,   default=4)
 
         # ── MeanFlow 专属超参
-        parser.add_argument('--mf_p_adaptive',    type=float, default=1.0,
-                            help='自适应 loss 权重指数 p（论文 Table 1e，p=1.0 最优）')
-        parser.add_argument('--mf_c_adaptive',    type=float, default=1e-3,
-                            help='自适应 loss 数值稳定常数')
-        parser.add_argument('--mf_ratio_r_neq_t', type=float, default=0.25,
-                            help='r != t 的采样比例（论文 Table 1a，0.25 最优）')
-        parser.add_argument('--mf_lognorm_mu',    type=float, default=-0.4,
-                            help='lognorm 时间采样均值（论文 Table 1d）')
-        parser.add_argument('--mf_lognorm_sigma', type=float, default=1.0,
-                            help='lognorm 时间采样标准差')
+        # parser.add_argument('--mf_p_adaptive',    type=float, default=1.0,
+        #                     help='自适应 loss 权重指数 p（论文 Table 1e，p=1.0 最优）')
+        # parser.add_argument('--mf_c_adaptive',    type=float, default=1e-3,
+        #                     help='自适应 loss 数值稳定常数')
+        # parser.add_argument('--mf_ratio_r_neq_t', type=float, default=0.25,
+        #                     help='r != t 的采样比例（论文 Table 1a，0.25 最优）')
+        # parser.add_argument('--mf_lognorm_mu',    type=float, default=-0.4,
+        #                     help='lognorm 时间采样均值（论文 Table 1d）')
+        # parser.add_argument('--mf_lognorm_sigma', type=float, default=1.0,
+        #                     help='lognorm 时间采样标准差')
 
         # ── DDP
         parser.add_argument('--rank',        type=int, default=0)
