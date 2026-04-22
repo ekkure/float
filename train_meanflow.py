@@ -59,9 +59,9 @@ class MeanFlowOptions(BaseOptions):
         parser.add_argument('--num_workers', type=int,   default=4)
         
 
-        parser.add_argument('--max_grad_norm',   type=float, default=1.0)
-        parser.add_argument('--mf_p_adaptive',   type=float, default=1.0)
-        parser.add_argument('--mf_c_adaptive',   type=float, default=1e-3)
+        #parser.add_argument('--max_grad_norm',   type=float, default=1.0)
+        #parser.add_argument('--mf_p_adaptive',   type=float, default=1.0)
+        #parser.add_argument('--mf_c_adaptive',   type=float, default=1e-3)
 
         # ── MeanFlow 专属超参
         # parser.add_argument('--mf_p_adaptive',    type=float, default=1.0,
@@ -125,14 +125,15 @@ class MotionLatentDataset(torch.utils.data.Dataset):
     """
     def __init__(self, data_root, split='train'):
         self.root  = Path(data_root) / split
-        self.files = sorted(self.root.glob('*.pt'))
+        self.files = sorted(self.root.rglob('*.pt'))
         assert len(self.files) > 0, f"No .pt files found in {self.root}"
 
     def __len__(self):
         return len(self.files)
 
     def __getitem__(self, idx):
-        data = torch.load(self.files[idx], map_location='cpu')
+        #data = torch.load(self.files[idx], map_location='cpu'， weights_only=True)
+        data = torch.load(self.files[idx], map_location='cpu', weights_only=True)
         return {
             'x0': data['x0'].float(),    # (L, dim_w)
             'wa': data['wa'].float(),    # (L, dim_w)

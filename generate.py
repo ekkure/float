@@ -27,7 +27,7 @@ class DataProcessor:
 		# wav2vec2 audio preprocessor
 		self.wav2vec_preprocessor = Wav2Vec2FeatureExtractor.from_pretrained(opt.wav2vec_model_path, local_files_only=True)
 
-		# image transform 
+		# image transform
 		self.transform = A.Compose([
 				A.Resize(height=opt.input_size, width=opt.input_size, interpolation=cv2.INTER_AREA),
 				A.Normalize(mean=(0.5,0.5,0.5), std=(0.5,0.5,0.5)),
@@ -38,7 +38,7 @@ class DataProcessor:
 	def process_img(self, img:np.ndarray) -> np.ndarray:
 		mult = 360. / img.shape[0]
 
-		resized_img = cv2.resize(img, dsize=(0, 0), fx = mult, fy = mult, interpolation=cv2.INTER_AREA if mult < 1. else cv2.INTER_CUBIC)        
+		resized_img = cv2.resize(img, dsize=(0, 0), fx = mult, fy = mult, interpolation=cv2.INTER_AREA if mult < 1. else cv2.INTER_CUBIC)
 		bboxes = self.fa.face_detector.detect_from_image(resized_img)
 		bboxes = [(int(x1 / mult), int(y1 / mult), int(x2 / mult), int(y2 / mult), score) for (x1, y1, x2, y2, score) in bboxes if score > 0.95]
 		bboxes = bboxes[0] # Just use first bbox
@@ -90,19 +90,31 @@ class InferenceAgent:
 		self.data_processor = DataProcessor(opt)
 
 	def load_model(self) -> None:
-		self.G = FLOAT_MeanFlow(self.opt)   # ← 改为 MeanFlow 版本
+		self.G = FLOAT_MeanFlow(self.opt)
 
 	def load_weight(self, checkpoint_path: str, rank: int) -> None:
+		# 第一步：先加载预训练自动编码器（解码器权重）
+		base_ckpt_path = getattr(self.opt, 'pretrained_autoencoder', None) \
+					 or 'checkpoints/float.pth'
+		base_state = torch.load(base_ckpt_path, map_location='cpu', weights_only=True)
+		with torch.no_grad():
+			for name, param in self.G.named_parameters():
+				if name in base_state:
+					param.copy_(base_state[name].to(rank))
+		del base_state
+
+		# 第二步：再用 meanflow checkpoint 覆盖 FMT 部分
 		state_dict = torch.load(checkpoint_path, map_location='cpu', weights_only=True)
 		with torch.no_grad():
-			for model_name, model_param in self.G.named_parameters():
-				if model_name in state_dict:
-					model_param.copy_(state_dict[model_name].to(rank))
-				elif "wav2vec2" in model_name: pass
+			for name, param in self.G.named_parameters():
+				if name in state_dict:
+					param.copy_(state_dict[name].to(rank))
+				elif "wav2vec2" in name:
+					pass
 				else:
-					print(f"! Warning; {model_name} not found in state_dict.")
-
+					pass
 		del state_dict
+	
 
 	def save_video(self, vid_target_recon: torch.Tensor, video_path: str, audio_path: str) -> str:
 		with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as temp_video:
@@ -131,25 +143,25 @@ class InferenceAgent:
 		r_cfg_scale: float	= 1.0,
 		e_cfg_scale: float	= 1.0,
 		emo: str 			= 'S2E',
-		nfe: int			= 1,    # ← 默认改为 1（MeanFlow 单步采样）
+		nfe: int			= 1,
 		no_crop: bool 		= False,
 		seed: int			= 25,
 		verbose: bool 		= False
-	) -> str:
+	):
 
 		data = self.data_processor.preprocess(ref_path, audio_path, no_crop = no_crop)
 		if verbose: print(f"> [Done] Preprocess.")
 
 		# inference
 		d_hat = self.G.inference(
-			data 		= data,
-			a_cfg_scale = a_cfg_scale,
-			r_cfg_scale = r_cfg_scale,
-			e_cfg_scale = e_cfg_scale,
-			emo 		= emo,
-			nfe			= nfe,
-			seed		= seed
-			)['d_hat']
+		 data 		= data,
+		 a_cfg_scale = a_cfg_scale,
+		 r_cfg_scale = r_cfg_scale,
+		 e_cfg_scale = e_cfg_scale,
+		 emo 		= emo,
+		 nfe			= nfe,
+		 seed		= seed
+		 )['d_hat']
 
 		res_video_path = self.save_video(d_hat, res_video_path, audio_path)
 		if verbose: print(f"> [Done] result saved at {res_video_path}")
@@ -174,8 +186,14 @@ class InferenceOptions(BaseOptions):
 				default=None, type=str, help='res video path')
 		parser.add_argument('--ckpt_path',
 				default="/home/nvadmin/workspace/taek/float-pytorch/checkpoints/float.pth", type=str, help='checkpoint path')
+		parser.add_argument('--pretrained_autoencoder', default='checkpoints/float.pth', type=str)
 		parser.add_argument('--res_dir',
 				default="./results", type=str, help='result dir')
+		#parser.add_argument('--nfe', default=1, type=int)
+		#parser.add_argument('--seed', default=25, type=int)
+		#parser.add_argument('--a_cfg_scale', default=2.0, type=float)
+		#parser.add_argument('--r_cfg_scale', default=1.0, type=float)
+		#parser.add_argument('--e_cfg_scale', default=1.0, type=float)
 		return parser
 
 
